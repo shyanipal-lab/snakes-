@@ -96,9 +96,15 @@ function getThemeColors() {
   }
   return { snake: "#00e5ff", glow: "#00e5ff", food: "#ff4081", bg: "#000" };
 }
-
 themeSelect.onchange = () => {
   theme = themeSelect.value;
+  applyTheme(theme);
+};
+
+function applyTheme(theme: string) {
+  document.body.classList.remove("cyber", "minimal", "retro");
+  document.body.classList.add(theme);
+}
 };
 
 function setLevel(newLevel: string) {
