@@ -1,14 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Modern Snake Game 🐍</title>
-  </head>
+<html>
+<head>
+  <title>Modern Snake Game</title>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
 
-  <body>
-    <div id="app"></div>
+<body>
+  <div class="container">
 
-   <script src="./src/game.js"></script>
-  </body>
+    <div class="left-panel">
+      <button onclick="restartGame()">🔄 Restart</button>
+      <div class="levels">
+        <button onclick="setLevel('easy')">Easy</button>
+        <button onclick="setLevel('impossible')">Impossible</button>
+      </div>
+      <h2 id="score">Score: 0</h2>
+    </div>
+
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <div class="right-panel">
+      <button onclick="move('UP')">⬆</button>
+      <div>
+        <button onclick="move('LEFT')">⬅</button>
+        <button onclick="move('RIGHT')">➡</button>
+      </div>
+      <button onclick="move('DOWN')">⬇</button>
+    </div>
+
+  </div>
+
+  <script src="./src/game.js"></script>
+</body>
 </html>
