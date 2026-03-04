@@ -63,3 +63,40 @@ button:hover {
   height: 50px;
   border-radius: 10px;
 }
+.game-layout {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.restart-btn {
+  background: #ff4081;
+  color: white;
+  font-weight: bold;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.right-panel button {
+  width: 55px;
+  height: 55px;
+  font-size: 20px;
+  border-radius: 12px;
+  background: #00e5ff;
+  color: black;
+  font-weight: bold;
+}
+
+.levels {
+  margin-bottom: 20px;
+}
