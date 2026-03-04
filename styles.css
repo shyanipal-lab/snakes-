@@ -1,102 +1,210 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: white;
+import "./styles.css";
+
+const app = document.getElementById("app")!;
+
+app.innerHTML = `
+  <div class="glass-container">
+    <h1>Modern Snake 🐍</h1>
+
+    <div class="levels">
+      <button id="easy" class="active">Easy</button>
+      <button id="hard">Impossible</button>
+    </div>
+
+    <div class="game-layout">
+      
+      <div class="left-panel">
+        <button id="restart" class="restart-btn">🔄 Restart</button>
+        <p id="score">Score: 0</p>
+        <p id="highscore">High Score: 0</p>
+      </div>
+
+      <canvas id="game" width="400" height="400"></canvas>
+
+      <div class="right-panel">
+        <button data-dir="UP">↑</button>
+        <button data-dir="DOWN">↓</button>
+        <button data-dir="LEFT">←</button>
+        <button data-dir="RIGHT">→</button>
+      </div>
+
+    </div>
+  </div>
+`;
+
+const canvas = document.getElementById("game") as HTMLCanvasElement;
+const ctx = canvas.getContext("2d")!;
+
+let snake = [{ x: 200, y: 200 }];
+let direction = "RIGHT";
+let food = randomFood();
+let score = 0;
+let speed = 200;
+let gameOver = false;
+let level = "easy";
+
+let particles: any[] = [];
+
+const scoreEl = document.getElementById("score")!;
+const highScoreEl = document.getElementById("highscore")!;
+const restartBtn = document.getElementById("restart")!;
+const easyBtn = document.getElementById("easy")!;
+const hardBtn = document.getElementById("hard")!;
+
+let highScore = Number(localStorage.getItem("snakeHighScore")) || 0;
+highScoreEl.innerText = `High Score: ${highScore}`;
+
+function randomFood() {
+  return {
+    x: Math.floor(Math.random() * 20) * 20,
+    y: Math.floor(Math.random() * 20) * 20
+  };
 }
 
-.glass-container {
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 30px;
-  text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+function setLevel(newLevel: string) {
+  level = newLevel;
+  speed = level === "easy" ? 200 : 70;
+
+  easyBtn.classList.toggle("active", level === "easy");
+  hardBtn.classList.toggle("active", level === "hard");
+
+  restartGame();
 }
 
-canvas {
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 12px;
-  margin: 20px 0;
+easyBtn.onclick = () => setLevel("easy");
+hardBtn.onclick = () => setLevel("hard");
+
+function moveSnake() {
+  if (gameOver) return;
+
+  const head = { ...snake[0] };
+
+  if (direction === "UP") head.y -= 20;
+  if (direction === "DOWN") head.y += 20;
+  if (direction === "LEFT") head.x -= 20;
+  if (direction === "RIGHT") head.x += 20;
+
+  if (
+    head.x < 0 ||
+    head.y < 0 ||
+    head.x >= 400 ||
+    head.y >= 400 ||
+    snake.some(s => s.x === head.x && s.y === head.y)
+  ) {
+    triggerExplosion(head.x, head.y);
+    endGame();
+    return;
+  }
+
+  snake.unshift(head);
+
+  if (head.x === food.x && head.y === food.y) {
+    score++;
+    scoreEl.innerText = `Score: ${score}`;
+    food = randomFood();
+
+    if (level === "easy") speed = Math.max(150, speed - 5);
+  } else {
+    snake.pop();
+  }
 }
 
-button {
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background: #00e5ff;
-  color: black;
-  font-weight: bold;
-  transition: 0.3s ease;
+function drawSnake() {
+  snake.forEach((part, index) => {
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#00e5ff";
+    ctx.fillStyle = index === 0 ? "#ffffff" : "#00e5ff";
+    ctx.fillRect(part.x, part.y, 18, 18);
+  });
+  ctx.shadowBlur = 0;
 }
 
-button:hover {
-  transform: scale(1.05);
-}
-.levels {
-  margin-bottom: 15px;
-}
-
-.levels button {
-  margin: 0 5px;
-  padding: 8px 16px;
-}
-
-.levels .active {
-  background: #ff4081;
-  color: white;
+function drawParticles() {
+  particles.forEach((p, i) => {
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 4, 4);
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  });
 }
 
-.controls {
-  margin: 15px 0;
+function triggerExplosion(x: number, y: number) {
+  for (let i = 0; i < 25; i++) {
+    particles.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      life: 30,
+      color: "#ff4081"
+    });
+  }
 }
 
-.controls button {
-  margin: 5px;
-  font-size: 18px;
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-}
-.game-layout {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+function draw() {
+  ctx.clearRect(0, 0, 400, 400);
+
+  drawSnake();
+
+  ctx.fillStyle = "#ff4081";
+  ctx.fillRect(food.x, food.y, 18, 18);
+
+  drawParticles();
 }
 
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+function gameLoop() {
+  moveSnake();
+  draw();
+  if (!gameOver) setTimeout(gameLoop, speed);
 }
 
-.restart-btn {
-  background: #ff4081;
-  color: white;
-  font-weight: bold;
+function endGame() {
+  gameOver = true;
+
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem("snakeHighScore", String(highScore));
+    highScoreEl.innerText = `High Score: ${highScore}`;
+  }
+
+  setTimeout(() => {
+    alert(`Game Over! Score: ${score}`);
+  }, 300);
 }
 
-.right-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+function restartGame() {
+  snake = [{ x: 200, y: 200 }];
+  direction = "RIGHT";
+  food = randomFood();
+  score = 0;
+  scoreEl.innerText = "Score: 0";
+  gameOver = false;
+  particles = [];
+  gameLoop();
 }
 
-.right-panel button {
-  width: 55px;
-  height: 55px;
-  font-size: 20px;
-  border-radius: 12px;
-  background: #00e5ff;
-  color: black;
-  font-weight: bold;
-}
+restartBtn.onclick = restartGame;
 
-.levels {
-  margin-bottom: 20px;
-}
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+  if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+  if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+  if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+});
+
+document.querySelectorAll(".right-panel button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    btn.classList.add("pressed");
+    setTimeout(() => btn.classList.remove("pressed"), 150);
+
+    const dir = btn.getAttribute("data-dir")!;
+    if (dir === "UP" && direction !== "DOWN") direction = "UP";
+    if (dir === "DOWN" && direction !== "UP") direction = "DOWN";
+    if (dir === "LEFT" && direction !== "RIGHT") direction = "LEFT";
+    if (dir === "RIGHT" && direction !== "LEFT") direction = "RIGHT";
+  });
+});
+
+gameLoop();
