@@ -5,8 +5,25 @@ const app = document.getElementById("app")!;
 app.innerHTML = `
   <div class="glass-container">
     <h1>Modern Snake 🐍</h1>
+
+    <div class="levels">
+      <button id="easy" class="active">Easy</button>
+      <button id="hard">Impossible</button>
+    </div>
+
     <canvas id="game" width="400" height="400"></canvas>
+
     <p id="score">Score: 0</p>
+
+    <div class="controls">
+      <button data-dir="UP">⬆️</button>
+      <div>
+        <button data-dir="LEFT">⬅️</button>
+        <button data-dir="DOWN">⬇️</button>
+        <button data-dir="RIGHT">➡️</button>
+      </div>
+    </div>
+
     <button id="restart">Restart</button>
   </div>
 `;
@@ -18,11 +35,14 @@ let snake = [{ x: 200, y: 200 }];
 let direction = "RIGHT";
 let food = randomFood();
 let score = 0;
-let speed = 120;
+let speed = 150;
 let gameOver = false;
+let level = "easy";
 
 const scoreEl = document.getElementById("score")!;
 const restartBtn = document.getElementById("restart")!;
+const easyBtn = document.getElementById("easy")!;
+const hardBtn = document.getElementById("hard")!;
 
 function randomFood() {
   return {
@@ -30,6 +50,22 @@ function randomFood() {
     y: Math.floor(Math.random() * 20) * 20
   };
 }
+
+function setLevel(newLevel: string) {
+  level = newLevel;
+  speed = level === "easy" ? 150 : 60;
+
+  easyBtn.classList.remove("active");
+  hardBtn.classList.remove("active");
+
+  if (level === "easy") easyBtn.classList.add("active");
+  if (level === "hard") hardBtn.classList.add("active");
+
+  restartGame();
+}
+
+easyBtn.onclick = () => setLevel("easy");
+hardBtn.onclick = () => setLevel("hard");
 
 function moveSnake() {
   if (gameOver) return;
@@ -49,7 +85,7 @@ function moveSnake() {
     snake.some(s => s.x === head.x && s.y === head.y)
   ) {
     gameOver = true;
-    alert(`Game Over! Final Score: ${score}`);
+    alert(`Game Over! Score: ${score}`);
     return;
   }
 
@@ -59,7 +95,7 @@ function moveSnake() {
     score++;
     scoreEl.innerText = `Score: ${score}`;
     food = randomFood();
-    speed = Math.max(60, speed - 3);
+    if (level === "easy") speed = Math.max(100, speed - 2);
   } else {
     snake.pop();
   }
@@ -85,6 +121,18 @@ function gameLoop() {
   }
 }
 
+function restartGame() {
+  snake = [{ x: 200, y: 200 }];
+  direction = "RIGHT";
+  food = randomFood();
+  score = 0;
+  scoreEl.innerText = "Score: 0";
+  gameOver = false;
+  gameLoop();
+}
+
+restartBtn.onclick = restartGame;
+
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
   if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
@@ -92,15 +140,14 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
 });
 
-restartBtn.onclick = () => {
-  snake = [{ x: 200, y: 200 }];
-  direction = "RIGHT";
-  food = randomFood();
-  score = 0;
-  speed = 120;
-  gameOver = false;
-  scoreEl.innerText = "Score: 0";
-  gameLoop();
-};
+document.querySelectorAll(".controls button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const dir = btn.getAttribute("data-dir")!;
+    if (dir === "UP" && direction !== "DOWN") direction = "UP";
+    if (dir === "DOWN" && direction !== "UP") direction = "DOWN";
+    if (dir === "LEFT" && direction !== "RIGHT") direction = "LEFT";
+    if (dir === "RIGHT" && direction !== "LEFT") direction = "RIGHT";
+  });
+});
 
 gameLoop();
