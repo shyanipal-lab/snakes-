@@ -38,3 +38,28 @@ button {
 button:hover {
   transform: scale(1.05);
 }
+.levels {
+  margin-bottom: 15px;
+}
+
+.levels button {
+  margin: 0 5px;
+  padding: 8px 16px;
+}
+
+.levels .active {
+  background: #ff4081;
+  color: white;
+}
+
+.controls {
+  margin: 15px 0;
+}
+
+.controls button {
+  margin: 5px;
+  font-size: 18px;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+}
