@@ -1,15 +1,15 @@
-const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
-const ctx = canvas.getContext("2d")!;
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
 const box = 20;
 const canvasSize = 400;
 
-let snake: { x: number; y: number }[] = [];
+let snake = [];
 let direction = "RIGHT";
 let food = randomFood();
 let score = 0;
-let level: "easy" | "impossible" = "easy";
-let gameInterval: number;
+let level = "easy";
+let gameInterval;
 
 function init() {
   snake = [{ x: 9 * box, y: 9 * box }];
@@ -23,7 +23,7 @@ function init() {
 
 function startGame() {
   const speed = level === "easy" ? 150 : 70;
-  gameInterval = window.setInterval(draw, speed);
+  gameInterval = setInterval(draw, speed);
 }
 
 function randomFood() {
@@ -55,16 +55,15 @@ function draw() {
   if (direction === "RIGHT") snakeX += box;
   if (direction === "DOWN") snakeY += box;
 
-  // Impossible mode AI trap
+  // Impossible mode randomness
   if (level === "impossible") {
     if (Math.random() < 0.1) {
-      direction = ["LEFT", "RIGHT", "UP", "DOWN"][
-        Math.floor(Math.random() * 4)
-      ];
+      const dirs = ["LEFT", "RIGHT", "UP", "DOWN"];
+      direction = dirs[Math.floor(Math.random() * 4)];
     }
   }
 
-  // Game over conditions
+  // Game Over conditions
   if (
     snakeX < 0 ||
     snakeY < 0 ||
@@ -77,7 +76,7 @@ function draw() {
     return;
   }
 
-  let newHead = { x: snakeX, y: snakeY };
+  const newHead = { x: snakeX, y: snakeY };
 
   if (snakeX === food.x && snakeY === food.y) {
     score++;
@@ -90,8 +89,8 @@ function draw() {
   snake.unshift(newHead);
 }
 
-function collision(x: number, y: number, array: any[]) {
-  return array.some((segment) => segment.x === x && segment.y === y);
+function collision(x, y, array) {
+  return array.some(segment => segment.x === x && segment.y === y);
 }
 
 function updateScore() {
@@ -99,8 +98,8 @@ function updateScore() {
   if (scoreEl) scoreEl.innerText = "Score: " + score;
 }
 
-// Controls
-document.addEventListener("keydown", (event) => {
+// Keyboard Controls
+document.addEventListener("keydown", function (event) {
   if (event.key === "ArrowLeft" && direction !== "RIGHT")
     direction = "LEFT";
   else if (event.key === "ArrowUp" && direction !== "DOWN")
@@ -111,21 +110,25 @@ document.addEventListener("keydown", (event) => {
     direction = "DOWN";
 });
 
-// On-screen buttons
-(window as any).move = (dir: string) => {
+// On-screen controls
+function move(dir) {
   if (dir === "LEFT" && direction !== "RIGHT") direction = "LEFT";
   if (dir === "UP" && direction !== "DOWN") direction = "UP";
   if (dir === "RIGHT" && direction !== "LEFT") direction = "RIGHT";
   if (dir === "DOWN" && direction !== "UP") direction = "DOWN";
-};
+}
 
-(window as any).setLevel = (newLevel: "easy" | "impossible") => {
+function setLevel(newLevel) {
   level = newLevel;
   init();
-};
+}
 
-(window as any).restartGame = () => {
+function restartGame() {
   init();
-};
+}
+
+window.move = move;
+window.setLevel = setLevel;
+window.restartGame = restartGame;
 
 init();
