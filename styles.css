@@ -208,3 +208,12 @@ document.querySelectorAll(".right-panel button").forEach(btn => {
 });
 
 gameLoop();
+.right-panel button.pressed {
+  transform: scale(0.9);
+  opacity: 0.7;
+}
+
+canvas {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+}
