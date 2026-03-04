@@ -1,153 +1,242 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Inter, sans-serif;
+import "./styles.css";
+
+const app = document.getElementById("app")!;
+
+app.innerHTML = `
+  <div class="glass-container">
+    <h1>Modern Snake 🐍</h1>
+
+    <div class="top-bar">
+      <div class="levels">
+        <button id="easy" class="active">Easy</button>
+        <button id="hard">Impossible</button>
+      </div>
+
+      <select id="theme">
+        <option value="cyber">Cyberpunk</option>
+        <option value="minimal">Minimal</option>
+        <option value="retro">Retro</option>
+      </select>
+    </div>
+
+    <div class="game-layout">
+      
+      <div class="left-panel">
+        <button id="restart" class="restart-btn">🔄 Restart</button>
+        <p id="score">Score: 0</p>
+        <p id="highscore">High Score: 0</p>
+      </div>
+
+      <canvas id="game" width="400" height="400"></canvas>
+
+      <div class="right-panel">
+        <button data-dir="UP">↑</button>
+        <button data-dir="DOWN">↓</button>
+        <button data-dir="LEFT">←</button>
+        <button data-dir="RIGHT">→</button>
+      </div>
+
+    </div>
+  </div>
+`;
+
+const canvas = document.getElementById("game") as HTMLCanvasElement;
+const ctx = canvas.getContext("2d")!;
+
+let snake = [{ x: 200, y: 200 }];
+let direction = "RIGHT";
+let food = randomFood();
+let score = 0;
+let speed = 200;
+let gameOver = false;
+let level = "easy";
+let theme = "cyber";
+
+let particles: any[] = [];
+
+const scoreEl = document.getElementById("score")!;
+const highScoreEl = document.getElementById("highscore")!;
+const restartBtn = document.getElementById("restart")!;
+const easyBtn = document.getElementById("easy")!;
+const hardBtn = document.getElementById("hard")!;
+const themeSelect = document.getElementById("theme") as HTMLSelectElement;
+
+let highScore = Number(localStorage.getItem("snakeHighScore")) || 0;
+highScoreEl.innerText = `High Score: ${highScore}`;
+
+function playEatSound() {
+  const audio = new Audio(
+    "https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav"
+  );
+  audio.volume = 0.3;
+  audio.play();
 }
 
-body {
-  background: radial-gradient(circle at top, #0f0f1a, #000);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+function playDeathSound() {
+  const audio = new Audio(
+    "https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"
+  );
+  audio.volume = 0.4;
+  audio.play();
 }
 
-.glass-container {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  padding: 30px;
-  border-radius: 24px;
-  box-shadow: 0 0 60px rgba(0, 229, 255, 0.2);
-  max-width: 900px;
-  width: 95%;
+function randomFood() {
+  return {
+    x: Math.floor(Math.random() * 20) * 20,
+    y: Math.floor(Math.random() * 20) * 20
+  };
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: 600;
+function getThemeColors() {
+  if (theme === "minimal") {
+    return { snake: "#111", glow: "#999", food: "#444", bg: "#f5f5f5" };
+  }
+  if (theme === "retro") {
+    return { snake: "#39ff14", glow: "#39ff14", food: "#ff073a", bg: "#000" };
+  }
+  return { snake: "#00e5ff", glow: "#00e5ff", food: "#ff4081", bg: "#000" };
 }
 
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 25px;
+themeSelect.onchange = () => {
+  theme = themeSelect.value;
+};
+
+function setLevel(newLevel: string) {
+  level = newLevel;
+  speed = level === "easy" ? 200 : 70;
+  easyBtn.classList.toggle("active", level === "easy");
+  hardBtn.classList.toggle("active", level === "hard");
+  restartGame();
 }
 
-.levels button,
-select {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-}
+easyBtn.onclick = () => setLevel("easy");
+hardBtn.onclick = () => setLevel("hard");
 
-.levels button {
-  margin-right: 10px;
-  background: #1f1f2e;
-  color: white;
-}
+function moveSnake() {
+  if (gameOver) return;
 
-.levels button.active {
-  background: #00e5ff;
-  color: black;
-}
+  const head = { ...snake[0] };
 
-.game-layout {
-  display: grid;
-  grid-template-columns: 150px 400px 150px;
-  align-items: center;
-  gap: 20px;
-}
+  if (direction === "UP") head.y -= 20;
+  if (direction === "DOWN") head.y += 20;
+  if (direction === "LEFT") head.x -= 20;
+  if (direction === "RIGHT") head.x += 20;
 
-.left-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.restart-btn {
-  background: #ff4081;
-  color: white;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-canvas {
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-/* PROPER D-PAD LAYOUT */
-.right-panel {
-  display: grid;
-  grid-template-areas:
-    ". up ."
-    "left . right"
-    ". down .";
-  gap: 10px;
-  justify-content: center;
-}
-
-.right-panel button {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
-  border: none;
-  font-size: 22px;
-  font-weight: bold;
-  cursor: pointer;
-  background: #00e5ff;
-  color: black;
-  transition: all 0.15s ease;
-}
-
-.right-panel button[data-dir="UP"] {
-  grid-area: up;
-}
-
-.right-panel button[data-dir="DOWN"] {
-  grid-area: down;
-}
-
-.right-panel button[data-dir="LEFT"] {
-  grid-area: left;
-}
-
-.right-panel button[data-dir="RIGHT"] {
-  grid-area: right;
-}
-
-.right-panel button:active {
-  transform: scale(0.9);
-  opacity: 0.7;
-}
-
-/* 📱 RESPONSIVE */
-@media (max-width: 900px) {
-  .game-layout {
-    grid-template-columns: 1fr;
-    text-align: center;
+  if (
+    head.x < 0 ||
+    head.y < 0 ||
+    head.x >= 400 ||
+    head.y >= 400 ||
+    snake.some(s => s.x === head.x && s.y === head.y)
+  ) {
+    triggerExplosion(head.x, head.y);
+    playDeathSound();
+    endGame();
+    return;
   }
 
-  .left-panel {
-    align-items: center;
-  }
+  snake.unshift(head);
 
-  .right-panel {
-    margin-top: 20px;
-  }
-
-  canvas {
-    width: 90vw;
-    height: 90vw;
-    max-width: 400px;
+  if (head.x === food.x && head.y === food.y) {
+    score++;
+    scoreEl.innerText = `Score: ${score}`;
+    food = randomFood();
+    playEatSound();
+  } else {
+    snake.pop();
   }
 }
+
+function draw() {
+  const colors = getThemeColors();
+
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, 400, 400);
+
+  snake.forEach((part, index) => {
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = colors.glow;
+    ctx.fillStyle = index === 0 ? "#fff" : colors.snake;
+    ctx.fillRect(part.x, part.y, 18, 18);
+  });
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = colors.food;
+  ctx.fillRect(food.x, food.y, 18, 18);
+
+  drawParticles();
+}
+
+function triggerExplosion(x: number, y: number) {
+  for (let i = 0; i < 25; i++) {
+    particles.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      life: 30
+    });
+  }
+}
+
+function drawParticles() {
+  particles.forEach((p, i) => {
+    ctx.fillStyle = "#ff4081";
+    ctx.fillRect(p.x, p.y, 4, 4);
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  });
+}
+
+function gameLoop() {
+  moveSnake();
+  draw();
+  if (!gameOver) setTimeout(gameLoop, speed);
+}
+
+function endGame() {
+  gameOver = true;
+
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem("snakeHighScore", String(highScore));
+    highScoreEl.innerText = `High Score: ${highScore}`;
+  }
+
+  setTimeout(() => {
+    alert(`Game Over! Score: ${score}`);
+  }, 300);
+}
+
+function restartGame() {
+  snake = [{ x: 200, y: 200 }];
+  direction = "RIGHT";
+  food = randomFood();
+  score = 0;
+  scoreEl.innerText = "Score: 0";
+  gameOver = false;
+  particles = [];
+  gameLoop();
+}
+
+restartBtn.onclick = restartGame;
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+  if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+  if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+  if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+});
+
+document.querySelectorAll(".right-panel button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    btn.classList.add("pressed");
+    setTimeout(() => btn.classList.remove("pressed"), 150);
+    direction = btn.getAttribute("data-dir")!;
+  });
+});
+
+gameLoop();
