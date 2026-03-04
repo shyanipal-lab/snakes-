@@ -1,0 +1,11 @@
+{
+  "name": "modern-snake-game",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "parcel build index.html --dist-dir dist"
+  },
+  "devDependencies": {
+    "parcel": "^2.0.0",
+    "typescript": "^5.0.0"
+  }
+}
