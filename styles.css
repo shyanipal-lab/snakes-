@@ -1,3 +1,37 @@
+:root {
+  --bg: #000;
+  --card: rgba(255,255,255,0.05);
+  --primary: #00e5ff;
+  --accent: #ff4081;
+  --text: white;
+}
+
+/* CYBERPUNK */
+body.cyber {
+  --bg: #000;
+  --card: rgba(0, 255, 255, 0.08);
+  --primary: #00e5ff;
+  --accent: #ff4081;
+  --text: white;
+}
+
+/* MINIMAL */
+body.minimal {
+  --bg: #f5f5f5;
+  --card: white;
+  --primary: #111;
+  --accent: #444;
+  --text: #111;
+}
+
+/* RETRO */
+body.retro {
+  --bg: #000;
+  --card: rgba(0, 255, 0, 0.08);
+  --primary: #39ff14;
+  --accent: #ff073a;
+  --text: #39ff14;
+}
 * {
   margin: 0;
   padding: 0;
