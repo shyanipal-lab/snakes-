@@ -11,20 +11,23 @@ app.innerHTML = `
       <button id="hard">Impossible</button>
     </div>
 
-    <canvas id="game" width="400" height="400"></canvas>
-
-    <p id="score">Score: 0</p>
-
-    <div class="controls">
-      <button data-dir="UP">⬆️</button>
-      <div>
-        <button data-dir="LEFT">⬅️</button>
-        <button data-dir="DOWN">⬇️</button>
-        <button data-dir="RIGHT">➡️</button>
+    <div class="game-layout">
+      
+      <div class="left-panel">
+        <button id="restart" class="restart-btn">🔄 Restart</button>
+        <p id="score">Score: 0</p>
       </div>
-    </div>
 
-    <button id="restart">Restart</button>
+      <canvas id="game" width="400" height="400"></canvas>
+
+      <div class="right-panel">
+        <button data-dir="UP">↑</button>
+        <button data-dir="DOWN">↓</button>
+        <button data-dir="LEFT">←</button>
+        <button data-dir="RIGHT">→</button>
+      </div>
+
+    </div>
   </div>
 `;
 
@@ -35,7 +38,7 @@ let snake = [{ x: 200, y: 200 }];
 let direction = "RIGHT";
 let food = randomFood();
 let score = 0;
-let speed = 150;
+let speed = 200; // slower easy
 let gameOver = false;
 let level = "easy";
 
@@ -53,7 +56,7 @@ function randomFood() {
 
 function setLevel(newLevel: string) {
   level = newLevel;
-  speed = level === "easy" ? 150 : 60;
+  speed = level === "easy" ? 200 : 70;
 
   easyBtn.classList.remove("active");
   hardBtn.classList.remove("active");
@@ -95,7 +98,10 @@ function moveSnake() {
     score++;
     scoreEl.innerText = `Score: ${score}`;
     food = randomFood();
-    if (level === "easy") speed = Math.max(100, speed - 2);
+
+    if (level === "easy") {
+      speed = Math.max(150, speed - 5); // still slower overall
+    }
   } else {
     snake.pop();
   }
@@ -140,7 +146,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
 });
 
-document.querySelectorAll(".controls button").forEach(btn => {
+document.querySelectorAll(".right-panel button").forEach(btn => {
   btn.addEventListener("click", () => {
     const dir = btn.getAttribute("data-dir")!;
     if (dir === "UP" && direction !== "DOWN") direction = "UP";
